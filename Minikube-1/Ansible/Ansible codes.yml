@@ -1,0 +1,100 @@
+#Create a jenkins job using basis authentcation
+- jenkins_job:
+    config: "{( Lookup('file', 'templates/test.xml') }}"
+    name: test
+    password: admin
+    url: http://localhost:8080
+    user: admin
+---
+# Delete a jenkins job using the token
+- jenkins_job:
+    name: test
+    token: asdfasfasasasdssdd
+    state: absent
+    url: http://localhost:8080
+    user: admin
+---
+# Create a data container
+- name: Create a data container
+  docker_container:
+     name: mydata
+     image: busybox
+     volumes:
+        - /data
+---
+# Start container
+- name: Start a data container with a command
+  docker_container:
+     name: sleepy
+     image: unbuntu: 14.04
+     command: ["sleep", "infinity"]
+---
+# Apply configurtion
+- name: Add container to networks
+  docker_container:
+     name: sleepy
+     networks: 
+       - name: TestingNet
+         ipv4_address: 172.1.1.18
+         links:
+            - sleeper
+       - name: TestingNet2
+         ipv4_address: 172.1.10.20
+---
+- name: install and start nginx
+- hosts: webservers
+  remote_user: root
+  vars:
+    tablename: foo
+    tableowner: someuser
+
+  tasks:
+    - name: create directory for nginx
+      file:
+        path: /path/to/nginx/dir
+        state: directory
+
+    - name: install nginx latest version
+      yum:
+        name: nginx
+        state: latest
+
+
+    - name: start nginx
+      service:
+        name: nginxstate: started
+---
+- name: install and start apache
+- hosts: webservers
+  become: True
+  tasks:
+    - name: Install packages
+      yum:
+        name: "httpd"
+    - name: Start Apache server
+      service:
+        name: httpd
+        state: started
+        enabled: True
+    - name: Deploy static website
+      service:
+        name: index.html
+        dest: /var/www/html/  
+--- 
+- name: copy to Kubernetes and run kubectl command
+- host: test
+  tasks:
+  - name: copy deployment file to kubernetes master
+    copy:
+      src: deployment.yml
+      dest: /root/
+  - name: delete previous kubernetes objects
+    command: kubectl delete -f /root/deployment.yml
+  - name: create a deployment by reading the definition fromlocal file
+    command: kubectl apply -f /root/deployment.yml
+---
+   
+
+
+
+

@@ -1,0 +1,34 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: simple-fanout-example
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  tls:
+  - hosts: 
+    - myapp.com
+    secretName: myapp-secret-tls
+  rules:
+    - host: myapp.com
+      http:
+        paths: 
+        - path: /analytics
+          backend:
+            serviceName: analytics-service
+            servicePort: 3000
+        - path: /shopping
+          backend:
+            serviceName: shopping-service
+            servicePort: 8080
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: myapp-secret-tls
+  namespace: default
+data:
+   tls.crt: base64 encoded cert
+   tls.key: base64 encoded key
+type: kubernetes.io/tls
+---
